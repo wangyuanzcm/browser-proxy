@@ -1,6 +1,5 @@
 "use strict";
-const send = require("koa-send");
-const Path = require("path");
+const fetch = require("node-fetch");
 
 /**
  * static files (404.html, sw.js, conf.js)
@@ -63,24 +62,23 @@ async function fetchHandler(ctx) {
   const urlObj = new URL(`https://localhost:8000${urlStr}`);
   const path = urlObj.href.substr(urlObj.origin.length);
   console.log("path", path, urlObj);
+  // 本地调试只能使用http协议
   // 如果不是https协议，则使用301重定向功能定向到https协议的页面上
-  if (urlObj.protocol === "http:") {
-    urlObj.protocol = "https:";
-     makeRes(ctx, "", 301, {
-      "strict-transport-security":
-        "max-age=99999999; includeSubDomains; preload",
-      location: urlObj.href,
-    });
-  }
-  console.log('https协议继续往下',path.startsWith("/http/") )
+  // if (urlObj.protocol === "http:") {
+  //   urlObj.protocol = "https:";
+  //    makeRes(ctx, "", 301, {
+  //     "strict-transport-security":
+  //       "max-age=99999999; includeSubDomains; preload",
+  //     location: urlObj.href,
+  //   });
+  // }
+  console.log("https协议继续往下", path.startsWith("/http/"));
   // 如果页面url上此时跟了调试的url的话，进入这个
   if (path.startsWith("/http/")) {
-    console.log(
-      "httpHdler================================================================"
-    );
+    // 进入调试页面的话开始对请求进行处理
     return httpHandler(ctx, req, path.substr(6));
   }
-  console.log('=====继续往下执行=====' )
+  console.log("=====继续往下执行=====");
   switch (path) {
     case "/http":
       return makeRes(ctx, "请更新 cfworker 到最新版本!");
@@ -89,9 +87,9 @@ async function fetchHandler(ctx) {
     case "/works":
       return makeRes(ctx, "it works");
     default:
-      ctx.response.redirect("/404.html")
-      // static files
-      // return fetch(ASSET_URL + path)
+      ctx.response.redirect("/404.html");
+    // static files
+    // return fetch(ASSET_URL + path)
   }
 }
 
@@ -100,8 +98,15 @@ async function fetchHandler(ctx) {
  * @param {string} pathname
  */
 function httpHandler(ctx, req, pathname) {
-  const reqHdrRaw = req.headers;
-  if (reqHdrRaw.has("x-jsproxy")) {
+  const reqHdrRaw = req.header;
+  console.log(
+    pathname,
+    req,
+    
+    "pathname================================================================"
+  );
+
+  if (Object.hasOwn(reqHdrRaw, "x-jsproxy")) {
     return Response.error();
   }
 
@@ -117,7 +122,7 @@ function httpHandler(ctx, req, pathname) {
   let rawSvr = "";
   let rawLen = "";
   let rawEtag = "";
-
+  //  为调试页面设置header
   const reqHdrNew = new Headers(reqHdrRaw);
   reqHdrNew.set("x-jsproxy", "1");
 
@@ -128,6 +133,7 @@ function httpHandler(ctx, req, pathname) {
   if (!query) {
     return makeRes(ctx, "missing params", 403);
   }
+  console.log(query,'query===' )
   const param = new URLSearchParams(query);
 
   for (const [k, v] of Object.entries(param)) {
@@ -154,9 +160,9 @@ function httpHandler(ctx, req, pathname) {
     reqHdrNew.delete("referer");
   }
 
-  // cfworker 会把路径中的 `//` 合并成 `/`
-  const urlStr = pathname.replace(/^(https?):\/+/, "$1://");
-  const urlObj = newUrl(urlStr);
+  // cfworker 会把路径中的 `//` 合并成 `/`,nodejs中不需要
+  // const urlStr = pathname.replace(/^(https?):\/+/, "$1://");
+  const urlObj = newUrl(pathname);
   if (!urlObj) {
     return makeRes(ctx, "invalid proxy url: " + urlStr, 403);
   }
@@ -170,6 +176,7 @@ function httpHandler(ctx, req, pathname) {
   if (req.method === "POST") {
     reqInit.body = req.body;
   }
+  console.log('进入代理===' )
   return proxy(ctx, urlObj, reqInit, acehOld, rawLen, 0);
 }
 
@@ -180,7 +187,18 @@ function httpHandler(ctx, req, pathname) {
  * @param {number} retryTimes
  */
 async function proxy(ctx, urlObj, reqInit, acehOld, rawLen, retryTimes) {
-  const res = await fetch(urlObj.href, reqInit);
+  console.log(urlObj.href,reqInit,'res=====fetch' )
+//   fetch(urlObj.href, reqInit).then(async function (response) {
+
+//     for await (const chunk of response.body) {
+//         console.log(chunk.toString());
+//     }
+
+// });
+
+
+  const res = await fetch(urlObj.href);
+  console.log(res,'res================================' )
   const resHdrOld = res.headers;
   const resHdrNew = new Headers(resHdrOld);
 

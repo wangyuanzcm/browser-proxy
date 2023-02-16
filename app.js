@@ -23,8 +23,10 @@ app.use(json());
 app.use(logger());
 app.use(bodyParser());
 
+app.use(serve("public"));
 
-router.get('/', async (ctx) => {
+router.get(`/*`, async (ctx) => {
+    console.log(ctx.path,'path-----' )
      fetchHandler(ctx).catch((err) =>
       makeRes(ctx, "cfworker error:\n" + err.stack, 502)
     );
@@ -32,7 +34,6 @@ router.get('/', async (ctx) => {
 
 
 app.use(router.routes());
-app.use(serve("public"));
 
-// app.listen(443);
-https.createServer(options, app.callback()).listen(443);
+app.listen(8000);
+// https.createServer(options, app.callback()).listen(443);
