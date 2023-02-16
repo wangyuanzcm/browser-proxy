@@ -1,4 +1,7 @@
 "use strict";
+const send = require("koa-send");
+const Path = require("path");
+
 /**
  * static files (404.html, sw.js, conf.js)
  */
@@ -56,26 +59,24 @@ function newUrl(urlStr) {
 async function fetchHandler(ctx) {
   const req = ctx.request;
   const urlStr = req.url;
-
-  const urlObj = new URL(`http://localhost:3000${urlStr}`);
-  console.log(urlObj);
+  // 这块内容存疑，其实不应该写死
+  const urlObj = new URL(`https://localhost:8000${urlStr}`);
   const path = urlObj.href.substr(urlObj.origin.length);
   console.log("path", path, urlObj);
+  // 如果不是https协议，则使用301重定向功能定向到https协议的页面上
   if (urlObj.protocol === "http:") {
-    console.log(
-      "https================================================================"
-    );
     urlObj.protocol = "https:";
-    return makeRes(ctx, "", 301, {
+     makeRes(ctx, "", 301, {
       "strict-transport-security":
         "max-age=99999999; includeSubDomains; preload",
       location: urlObj.href,
     });
   }
-
+  console.log('https协议继续往下',path.startsWith("/http/") )
+  // 如果页面url上此时跟了调试的url的话，进入这个
   if (path.startsWith("/http/")) {
     console.log(
-      "httpHandler================================================================"
+      "httpHdler================================================================"
     );
     return httpHandler(ctx, req, path.substr(6));
   }
@@ -88,9 +89,9 @@ async function fetchHandler(ctx) {
     case "/works":
       return makeRes(ctx, "it works");
     default:
+      ctx.response.redirect("/404.html")
       // static files
       // return fetch(ASSET_URL + path)
-      return;
   }
 }
 
