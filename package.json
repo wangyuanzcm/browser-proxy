@@ -1,0 +1,16 @@
+{
+  "name": "browser-proxy",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node --inspect app.js"
+  },
+  "dependencies": {
+    "koa": "^2.14.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0",
+    "koa-static": "^5.0.0"
+  }
+}
