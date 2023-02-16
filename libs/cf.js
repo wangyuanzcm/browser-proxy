@@ -125,7 +125,7 @@ function httpHandler(ctx, req, pathname) {
   const refer = reqHdrNew.get("referer");
   const query = refer.substr(refer.indexOf("?") + 1);
   if (!query) {
-    return makeRes("missing params", 403);
+    return makeRes(ctx, "missing params", 403);
   }
   const param = new URLSearchParams(query);
 
@@ -285,16 +285,10 @@ async function parseYtVideoRedir(urlObj, newLen, res) {
   if (newLen > 2000) {
     return null;
   }
-  if (!isYtUrl(urlObj)) {
-    return null;
-  }
   try {
     const data = await res.text();
     urlObj = new URL(data);
   } catch (err) {
-    return null;
-  }
-  if (!isYtUrl(urlObj)) {
     return null;
   }
   return urlObj;
