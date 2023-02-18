@@ -1,5 +1,6 @@
 "use strict";
 const fetch = require("node-fetch");
+const axios = require('axios').default;
 
 /**
  * static files (404.html, sw.js, conf.js)
@@ -102,7 +103,7 @@ function httpHandler(ctx, req, pathname) {
   console.log(
     pathname,
     req,
-    
+
     "pathname================================================================"
   );
 
@@ -131,9 +132,10 @@ function httpHandler(ctx, req, pathname) {
   const refer = reqHdrNew.get("referer");
   const query = refer.substr(refer.indexOf("?") + 1);
   if (!query) {
-    return makeRes(ctx, "missing params", 403);
+    makeRes(ctx, "missing params", 403);
+    return null;
   }
-  console.log(query,'query===' )
+  console.log(query, "query===");
   const param = new URLSearchParams(query);
 
   for (const [k, v] of Object.entries(param)) {
@@ -164,7 +166,8 @@ function httpHandler(ctx, req, pathname) {
   // const urlStr = pathname.replace(/^(https?):\/+/, "$1://");
   const urlObj = newUrl(pathname);
   if (!urlObj) {
-    return makeRes(ctx, "invalid proxy url: " + urlStr, 403);
+    makeRes(ctx, "invalid proxy url: " + urlStr, 403);
+    return null;
   }
 
   /** @type {RequestInit} */
@@ -176,8 +179,11 @@ function httpHandler(ctx, req, pathname) {
   if (req.method === "POST") {
     reqInit.body = req.body;
   }
-  console.log('进入代理===' )
-  return proxy(ctx, urlObj, reqInit, acehOld, rawLen, 0);
+  console.log("进入代理===");
+  return {
+    urlObj, reqInit, acehOld, rawLen, retryTimes: 0
+  }
+  // return proxy(ctx, urlObj, reqInit, acehOld, rawLen, 0);
 }
 
 /**
@@ -186,19 +192,12 @@ function httpHandler(ctx, req, pathname) {
  * @param {RequestInit} reqInit
  * @param {number} retryTimes
  */
-async function proxy(ctx, urlObj, reqInit, acehOld, rawLen, retryTimes) {
-  console.log(urlObj.href,reqInit,'res=====fetch' )
-//   fetch(urlObj.href, reqInit).then(async function (response) {
+async function proxyFetch(ctx, { urlObj, reqInit, acehOld, rawLen, retryTimes }, res) {
+  console.log(urlObj.href, reqInit, "res=====fetch");
 
-//     for await (const chunk of response.body) {
-//         console.log(chunk.toString());
-//     }
+  //  const  res = await fetch(urlObj.href);
 
-// });
-
-
-  const res = await fetch(urlObj.href);
-  console.log(res,'res================================' )
+  console.log(typeof res, "res================================");
   const resHdrOld = res.headers;
   const resHdrNew = new Headers(resHdrOld);
 
@@ -278,11 +277,19 @@ async function proxy(ctx, urlObj, reqInit, acehOld, rawLen, retryTimes) {
   ) {
     status = status + 10;
   }
+  console.log(res.body,'====' )
+  let body = [];
+  for await (const chunk of res.body) {
+    body.push(chunk.toString());
+  }
+  // makeRes(ctx, '====', 200, {});
 
-  return new Response(res.body, {
-    status,
-    headers: resHdrNew,
-  });
+  makeRes(ctx, body.join(""), status, resHdrNew);
+
+  // return new Response(res.body, {
+  //   status,
+  //   headers: resHdrNew,
+  // });
 }
 
 /**
@@ -315,3 +322,6 @@ async function parseYtVideoRedir(urlObj, newLen, res) {
 
 exports.fetchHandler = fetchHandler;
 exports.makeRes = makeRes;
+exports.httpHandler = httpHandler;
+exports.proxyFetch = proxyFetch;
+
