@@ -195,9 +195,6 @@ function httpHandler(ctx, req, pathname) {
 async function proxyFetch(ctx, { urlObj, reqInit, acehOld, rawLen, retryTimes }, res) {
   console.log(urlObj.href, reqInit, "res=====fetch");
 
-  //  const  res = await fetch(urlObj.href);
-
-  console.log(typeof res, "res================================");
   const resHdrOld = res.headers;
   const resHdrNew = new Headers(resHdrOld);
 
@@ -277,14 +274,12 @@ async function proxyFetch(ctx, { urlObj, reqInit, acehOld, rawLen, retryTimes },
   ) {
     status = status + 10;
   }
-  console.log(res.body,'====' )
-  let body = [];
-  for await (const chunk of res.body) {
-    body.push(chunk.toString());
-  }
-  // makeRes(ctx, '====', 200, {});
+  return {res, status, resHdrNew};
 
-  makeRes(ctx, body.join(""), status, resHdrNew);
+
+  // console.log(body,'====' )
+
+  // makeRes(ctx, body.join(""), status, resHdrNew);
 
   // return new Response(res.body, {
   //   status,

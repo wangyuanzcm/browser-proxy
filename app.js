@@ -8,8 +8,9 @@ const bodyParser = require("koa-bodyparser");
 const send = require("koa-send");
 const Router = require("koa-router");
 const serve = require("koa-static");
+const axios = require('axios').default;
 
-const { fetchHandler, makeRes, httpHandler,proxyFetch } = require("./libs/cf");
+const { fetchHandler, makeRes, httpHandler, proxyFetch } = require("./libs/cf");
 
 const app = new Koa();
 const router = new Router();
@@ -54,7 +55,11 @@ router.get(`/*`, async (ctx, next) => {
             // 进入调试页面的话开始对请求进行处理
             const result = httpHandler(ctx, req, path.substr(6));
             const res = await fetch(result.urlObj.href);
-            proxyFetch(ctx, result, res)
+            console.log(res, '=====res')
+            const response = await proxyFetch(ctx, result, res)
+            const responseText = await response.res.text();
+            console.log(response, 'responseText-----');
+            makeRes(ctx, responseText, response.status, {});
             return
         }
         console.log("=====继续往下执行=====");
