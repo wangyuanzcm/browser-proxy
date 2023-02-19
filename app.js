@@ -9,6 +9,7 @@ const send = require("koa-send");
 const Router = require("koa-router");
 const serve = require("koa-static");
 const axios = require('axios').default;
+const AnyProxy = require('anyproxy');
 
 const { fetchHandler, makeRes, httpHandler, proxyFetch } = require("./libs/cf");
 
@@ -72,8 +73,6 @@ router.get(`/*`, async (ctx, next) => {
                 return makeRes(ctx, "it works");
             default:
                 ctx.response.redirect("/404.html");
-            // static files
-            // return fetch(ASSET_URL + path)
         }
     } catch (err) {
         makeRes(ctx, "cfworker error:\n" + err.stack, 502);
@@ -85,3 +84,25 @@ app.use(router.routes());
 
 app.listen(8000);
 // https.createServer(options, app.callback()).listen(443);
+
+// // anyproxy代理配置
+// const proxyOptions = {
+//   port: 8001,
+// //   rule: require('myRuleModule'),
+//   webInterface: {
+//     enable: true,
+//     webPort: 8002
+//   },
+//   throttle: 10000,
+//   forceProxyHttps: false,
+//   wsIntercept: false, // 不开启websocket代理
+//   silent: false
+// };
+// const proxyServer = new AnyProxy.ProxyServer(proxyOptions);
+
+// proxyServer.on('ready', () => { /* */ });
+// proxyServer.on('error', (e) => { /* */ });
+// proxyServer.start();
+
+// //when finished
+// proxyServer.close();

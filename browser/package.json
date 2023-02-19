@@ -1,0 +1,19 @@
+{
+  "name": "browser",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bundle-unpack.js",
+  "scripts": {
+    "unpack":"node webpack_mixer.js -l bundle-unpack.js -o webpack_out.js ",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/generator": "^7.20.14",
+    "@babel/parser": "^7.20.15",
+    "@babel/traverse": "^7.20.13",
+    "@babel/types": "^7.20.7"
+  }
+}
